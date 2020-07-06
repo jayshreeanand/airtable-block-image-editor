@@ -24,15 +24,19 @@ function ImageEditorBlock() {
   const base = useBase();
 
   const globalConfig = useGlobalConfig();
-  const tableId = globalConfig.get("selectedTableId");
-  const imageFieldId = globalConfig.get("imageFieldId");
-  const editedImageFieldId = globalConfig.get("editedImageFieldId");
 
+  const tableId = globalConfig.get("selectedTableId");
   const table = base.getTableByIdIfExists(tableId);
+
+  const imageFieldId = globalConfig.get("imageFieldId");
   const imageField = table ? table.getFieldByIdIfExists(imageFieldId) : null;
+
+  const editedImageFieldId = globalConfig.get("editedImageFieldId");
   const editedImageField = table
     ? table.getFieldByIdIfExists(editedImageField)
     : null;
+
+  const removeBgApiKey = globalConfig.get("removeBgApiKey");
 
   // const imageField = table.getFieldByName(IMAGE_FIELD_NAME);
   const records = useRecords(table, { fields: [imageField] });
