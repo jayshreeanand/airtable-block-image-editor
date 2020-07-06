@@ -9,6 +9,7 @@ import {
   Button,
   Box,
   FormField,
+  InputSynced,
   TablePickerSynced,
   FieldPickerSynced,
 } from "@airtable/blocks/ui";
@@ -70,6 +71,28 @@ function ImageEditorBlock() {
     setIsUpdateInProgress(false);
   }
 
+  const handleApiKeyChange = () => {
+    const removeBgApiKey = globalConfig.get("removeBgApiKey");
+
+    globalConfig.setPathsAsync("removeBgApiKey", removeBgApiKey);
+  };
+
+  function updateApiKeyIfPossible(apiKey) {
+    if (globalConfig.hasPermissionToSetPaths("apiKey", apiKey)) {
+      globalConfig.setPathsAsync("apiKey", apiKey);
+    }
+    // The update is now applied within your block (eg will be
+    // reflected in globalConfig) but are still being saved to
+    // Airtable servers (e.g. may not be updated for other users yet)
+  }
+  async function updateApiKeyIfPossibleAsync(apiKey) {
+    if (globalConfig.hasPermissionToSet("apiKey", apiKey)) {
+      await globalConfig.setAsync("apiKey", apiKey);
+    }
+    // globalConfig updates have been saved to Airtable servers.
+    alert("apiKey has been updated");
+  }
+
   return (
     <Box padding={3} borderBottom="thick">
       {isSettingsVisible && (
@@ -92,6 +115,13 @@ function ImageEditorBlock() {
           globalConfigKey="editedImageFieldId"
           placeholder="Pick the field for edited image"
           allowedTypes={[FieldType.MULTIPLE_ATTACHMENTS]}
+        />
+      </FormField>
+      <FormField label="Remove BG API Key">
+        <InputSynced
+          globalConfigKey="removeBgApiKey"
+          placeholder="API KEY"
+          width="630px"
         />
       </FormField>
 
