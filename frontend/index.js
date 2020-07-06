@@ -3,12 +3,15 @@ import {
   useBase,
   useRecords,
   useGlobalConfig,
+  Label,
   Loader,
   Button,
   Box,
+  FormField,
   TablePickerSynced,
   FieldPickerSynced,
 } from "@airtable/blocks/ui";
+import { FieldType } from "@airtable/blocks/models";
 import React, { Fragment, useState } from "react";
 
 // const TABLE_NAME = "Products";
@@ -23,9 +26,14 @@ function ImageEditorBlock() {
   const globalConfig = useGlobalConfig();
   const tableId = globalConfig.get("selectedTableId");
   const imageFieldId = globalConfig.get("imageFieldId");
+  const editedImageFieldId = globalConfig.get("editedImageFieldId");
 
   const table = base.getTableByIdIfExists(tableId);
   const imageField = table ? table.getFieldByIdIfExists(imageFieldId) : null;
+  const editedImageField = table
+    ? table.getFieldByIdIfExists(editedImageField)
+    : null;
+
   // const imageField = table.getFieldByName(IMAGE_FIELD_NAME);
   const records = useRecords(table, { fields: [imageField] });
 
@@ -50,9 +58,27 @@ function ImageEditorBlock() {
   }
 
   return (
-    <div>
-      <TablePickerSynced globalConfigKey="selectedTableId" />
-      <FieldPickerSynced table={table} globalConfigKey="imageFieldId" />
+    <Box padding={3} borderBottom="thick">
+      <FormField label="Table">
+        <TablePickerSynced globalConfigKey="selectedTableId" />
+      </FormField>
+      <FormField label="Image Field">
+        <FieldPickerSynced
+          table={table}
+          globalConfigKey="imageFieldId"
+          placeholder="Pick source image field"
+          allowedTypes={[FieldType.MULTIPLE_ATTACHMENTS]}
+        />
+      </FormField>
+      <FormField label="Edited Image Field">
+        <FieldPickerSynced
+          table={table}
+          globalConfigKey="editedImageFieldId"
+          placeholder="Pick the field for edited image"
+          allowedTypes={[FieldType.MULTIPLE_ATTACHMENTS]}
+        />
+      </FormField>
+
       <div
         position="absolute"
         top="0"
@@ -81,7 +107,7 @@ function ImageEditorBlock() {
           </Fragment>
         )}
       </div>
-    </div>
+    </Box>
   );
 }
 
