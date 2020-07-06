@@ -4,12 +4,10 @@ import {
   useRecords,
   useGlobalConfig,
   useSettingsButton,
-  Label,
   Loader,
   Button,
   Box,
   ColorPaletteSynced,
-  colors,
   colorUtils,
   FormField,
   InputSynced,
@@ -17,26 +15,20 @@ import {
   FieldPickerSynced,
   ViewPickerSynced,
 } from "@airtable/blocks/ui";
+
 import { FieldType } from "@airtable/blocks/models";
 import React, { Fragment, useState } from "react";
 import SettingsForm from "./SettingsForm";
 import { allowedColors } from "./allowedColors";
-import { image } from "cloudinary/lib/cloudinary";
 const url = require("url");
 
 var cloudinary = require("cloudinary/lib/cloudinary").v2;
 var removeBgApiKey, cloudinaryUrl, selectedColor, imageWidth, imageHeight;
-
-const fs = require("fs");
-
-const EDITED_IMAGE_FIELD_NAME = "Edited Image";
 const MAX_RECORDS_PER_UPDATE = 50;
-const API_ENDPOINT = "https://api.remove.bg/v1.0/removebg";
 
 function ImageEditorBlock() {
   const base = useBase();
 
-  // Settings
   useSettingsButton(() => {
     setIsSettingsVisible(!isSettingsVisible);
   });
@@ -63,17 +55,6 @@ function ImageEditorBlock() {
     const cloudinaryApiKey = uri.auth && uri.auth.split(":")[0];
     const cloudinaryApiSecret = uri.auth && uri.auth.split(":")[1];
 
-    // let parsedConfig = {
-    //   cloud_name: uri.host,
-    //   api_key: uri.auth && uri.auth.split(":")[0],
-    //   api_secret: uri.auth && uri.auth.split(":")[1],
-    //   private_cdn: uri.pathname != null,
-    //   secure_distribution: uri.pathname && uri.pathname.substring(1),
-    // };
-
-    console.log(uri.host);
-    console.log(cloudinaryApiKey);
-    console.log(cloudinaryApiSecret);
     cloudinary.config({
       cloud_name: uri.host,
       api_key: cloudinaryApiKey,
@@ -289,11 +270,10 @@ async function getImageUpdatesAsync(
           font_family: "Arial",
           font_size: 20,
           font_weight: "bold",
-          text: "Hello%20World",
+          text: "watermark",
         },
         gravity: "south_east",
-        x: 20,
-        y: 20,
+        y: 5,
         color: "#eee",
       };
 
@@ -317,27 +297,10 @@ async function getImageUpdatesAsync(
       recordUpdates.push({
         id: record.id,
         fields: {
-          [EDITED_IMAGE_FIELD_NAME]: [{ url: cloudinaryImage.secure_url }],
+          [editedImageField.name]: [{ url: cloudinaryImage.secure_url }],
         },
       });
     }
-
-    // const image = record.getAttachmentimageUrlFromCellValueUrl()
-    // const image = record.getCellValueAsString(titleField);
-    // const requestUrl = `${API_ENDPOINT}/${encodeURIComponent(articleTitle)}?redirect=true`;
-    // const response = await fetch(requestUrl, {cors: true});
-    // const pageSummary = await response.json();
-
-    // recordUpdates.push({
-    //     id: record.id,
-    //     fields: {
-    //         [EXTRACT_FIELD_NAME]: pageSummary.extract,
-    //         [IMAGE_FIELD_NAME]: pageSummary.originalimage
-    //             ? [{url: pageSummary.originalimage.source}]
-    //             : undefined,
-    //     },
-    // });
-
     await delayAsync(50);
   }
   return recordUpdates;
