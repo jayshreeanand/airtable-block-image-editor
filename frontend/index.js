@@ -278,6 +278,13 @@ async function getImageUpdatesAsync(
 
       const cloudinaryOptions = {
         crop: "pad",
+        overlay: {
+          font_family: "Arial",
+          font_size: 45,
+          font_weight: "bold",
+          text: "Hello%20World",
+        },
+        gravity: "south",
       };
 
       if (imageWidth) {
