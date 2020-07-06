@@ -23,7 +23,12 @@ import { allowedColors } from "./allowedColors";
 const url = require("url");
 
 var cloudinary = require("cloudinary/lib/cloudinary").v2;
-var removeBgApiKey, cloudinaryUrl, selectedColor, imageWidth, imageHeight;
+var removeBgApiKey,
+  cloudinaryUrl,
+  selectedColor,
+  imageWidth,
+  imageHeight,
+  editedImageField;
 const MAX_RECORDS_PER_UPDATE = 50;
 
 function ImageEditorBlock() {
@@ -70,19 +75,14 @@ function ImageEditorBlock() {
     ? table.getFieldByIdIfExists(backgroundImageFieldId)
     : null;
 
-  const backgroundColorFieldId = globalConfig.get("backgroundColorFieldId");
-  const backgroundColorField = table
-    ? table.getFieldByIdIfExists(backgroundColorFieldId)
-    : null;
-
   const editedImageFieldId = globalConfig.get("editedImageFieldId");
-  const editedImageField = table
-    ? table.getFieldByIdIfExists(editedImageField)
+  editedImageField = table
+    ? table.getFieldByIdIfExists(editedImageFieldId)
     : null;
 
   // const imageField = table.getFieldByName(IMAGE_FIELD_NAME);
   const records = useRecords(view, {
-    fields: [imageField, backgroundImageField, backgroundColorField],
+    fields: [imageField, backgroundImageField],
   });
 
   const [isUpdateInProgress, setIsUpdateInProgress] = useState(false);
@@ -162,15 +162,6 @@ function ImageEditorBlock() {
           globalConfigKey="backgroundImageFieldId"
           placeholder="Pick the field for background image"
           allowedTypes={[FieldType.MULTIPLE_ATTACHMENTS]}
-          shouldAllowPickingNone="true"
-        />
-      </FormField>
-      <FormField label="Background Color Field (optional)">
-        <FieldPickerSynced
-          table={table}
-          globalConfigKey="backgrounColorFieldId"
-          placeholder="Pick the field for background color"
-          allowedTypes={[FieldType.SINGLE_LINE_TEXT]}
           shouldAllowPickingNone="true"
         />
       </FormField>
