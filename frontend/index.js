@@ -65,33 +65,34 @@ function ImageEditorBlock() {
     const recordUpdates = await getImageUpdatesAsync(
       table,
       imageField,
-      records
+      records,
+      removeBgApiKey
     );
     await updateRecordsInBatchesAsync(table, recordUpdates);
     setIsUpdateInProgress(false);
   }
 
-  const handleApiKeyChange = () => {
-    const removeBgApiKey = globalConfig.get("removeBgApiKey");
+  // const handleApiKeyChange = () => {
+  //   const removeBgApiKey = globalConfig.get("removeBgApiKey");
 
-    globalConfig.setPathsAsync("removeBgApiKey", removeBgApiKey);
-  };
+  //   globalConfig.setPathsAsync("removeBgApiKey", removeBgApiKey);
+  // };
 
-  function updateApiKeyIfPossible(apiKey) {
-    if (globalConfig.hasPermissionToSetPaths("apiKey", apiKey)) {
-      globalConfig.setPathsAsync("apiKey", apiKey);
-    }
-    // The update is now applied within your block (eg will be
-    // reflected in globalConfig) but are still being saved to
-    // Airtable servers (e.g. may not be updated for other users yet)
-  }
-  async function updateApiKeyIfPossibleAsync(apiKey) {
-    if (globalConfig.hasPermissionToSet("apiKey", apiKey)) {
-      await globalConfig.setAsync("apiKey", apiKey);
-    }
-    // globalConfig updates have been saved to Airtable servers.
-    alert("apiKey has been updated");
-  }
+  // function updateApiKeyIfPossible(apiKey) {
+  //   if (globalConfig.hasPermissionToSetPaths("apiKey", apiKey)) {
+  //     globalConfig.setPathsAsync("apiKey", apiKey);
+  //   }
+  //   // The update is now applied within your block (eg will be
+  //   // reflected in globalConfig) but are still being saved to
+  //   // Airtable servers (e.g. may not be updated for other users yet)
+  // }
+  // async function updateApiKeyIfPossibleAsync(apiKey) {
+  //   if (globalConfig.hasPermissionToSet("apiKey", apiKey)) {
+  //     await globalConfig.setAsync("apiKey", apiKey);
+  //   }
+  //   // globalConfig updates have been saved to Airtable servers.
+  //   alert("apiKey has been updated");
+  // }
 
   return (
     <Box padding={3} borderBottom="thick">
@@ -157,12 +158,17 @@ function ImageEditorBlock() {
   );
 }
 
-async function getImageUpdatesAsync(table, imageField, records) {
+async function getImageUpdatesAsync(
+  table,
+  imageField,
+  records,
+  removeBgApiKey
+) {
   const recordUpdates = [];
   for (const record of records) {
     const attachmentCellValue = record.getCellValue(imageField);
     console.log({ attachmentCellValue });
-    const clientUrl = attachmentCellValue
+    const imageUrl = attachmentCellValue
       ? attachmentCellValue[0]["url"]
       : "nothing here";
 
@@ -194,36 +200,36 @@ async function getImageUpdatesAsync(table, imageField, records) {
     // );
 
     var editedImage = null;
-    // if (attachmentCellValue) {
-    //   const requestUrl = "https://api.remove.bg/v1.0/removebg";
+    if (attachmentCellValue) {
+      const requestUrl = "https://api.remove.bg/v1.0/removebg";
 
-    //   var headers = {
-    //     "X-Api-Key": process.env.REMOVE_BG_API_KEY,
-    //     "Content-Type": "application/json",
-    //     Accept: "application/json",
-    //   };
+      var headers = {
+        "X-Api-Key": removeBgApiKey,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      };
 
-    //   var data = {
-    //     image_url: "https://www.remove.bg/example.jpg",
-    //     size: "auto",
-    //   };
+      var data = {
+        image_url: imageUrl,
+        size: "auto",
+      };
 
-    //   const response = await fetch(requestUrl, {
-    //     method: "POST",
-    //     headers: headers,
-    //     cors: true,
-    //     body: JSON.stringify(data),
-    //   });
+      const response = await fetch(requestUrl, {
+        method: "POST",
+        headers: headers,
+        cors: true,
+        body: JSON.stringify(data),
+      });
 
-    //   const updatedImage = await response.json();
-    //   console.log({ updatedImage });
-    //   editedImage = updatedImage.body;
-    //   // editedImage = updatedImage.data.result_b64;
-    //   // editedImage = new Image();
-    //   editedImage = "data:image/png;base64, " + updatedImage.data.result_b64;
+      const updatedImage = await response.json();
+      console.log({ updatedImage });
+      editedImage = updatedImage.body;
+      // editedImage = updatedImage.data.result_b64;
+      // editedImage = new Image();
+      editedImage = "data:image/png;base64, " + updatedImage.data.result_b64;
 
-    //   console.log({ editedImage });
-    // }
+      console.log({ editedImage });
+    }
 
     recordUpdates.push({
       id: record.id,
@@ -232,7 +238,7 @@ async function getImageUpdatesAsync(table, imageField, records) {
       },
     });
 
-    // const image = record.getAttachmentClientUrlFromCellValueUrl()
+    // const image = record.getAttachmentimageUrlFromCellValueUrl()
     // const image = record.getCellValueAsString(titleField);
     // const requestUrl = `${API_ENDPOINT}/${encodeURIComponent(articleTitle)}?redirect=true`;
     // const response = await fetch(requestUrl, {cors: true});
