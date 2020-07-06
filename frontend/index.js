@@ -258,8 +258,8 @@ async function getImageUpdatesAsync(
 
       if (backgroundImageUrl) {
         data.bg_image_url = backgroundImageUrl;
-      }
-      if (selectedColor) {
+      } else if (selectedColor) {
+        //Bacground image takes priority
         data.bg_color = colorUtils.getHexForColor(selectedColor);
       }
 
