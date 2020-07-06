@@ -18,8 +18,8 @@ const API_ENDPOINT = "https://api.remove.bg/v1.0/removebg";
 function ImageEditorBlock() {
   const base = useBase();
 
-  const [tableName, setTableName] = useState("Products");
-  const table = base.getTableByNameIfExists(tableName);
+  const [tableId, setTableId] = useState("Products");
+  const table = base.getTableByNameIfExists(tableId);
   const imageField = table.getFieldByName(IMAGE_FIELD_NAME);
   const records = useRecords(table, { fields: [imageField] });
 
@@ -46,7 +46,7 @@ function ImageEditorBlock() {
       <TablePicker
         table={table}
         onChange={(newTable) => {
-          setTableName(newTable.name);
+          setTableId(newTable.id);
         }}
       />
       <div
