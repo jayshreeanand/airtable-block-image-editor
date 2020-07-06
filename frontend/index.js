@@ -3,6 +3,7 @@ import {
   useBase,
   useRecords,
   useGlobalConfig,
+  useSettingsButton,
   Label,
   Loader,
   Button,
@@ -13,6 +14,7 @@ import {
 } from "@airtable/blocks/ui";
 import { FieldType } from "@airtable/blocks/models";
 import React, { Fragment, useState } from "react";
+import SettingsForm from "./SettingsForm";
 
 // const TABLE_NAME = "Products";
 // const IMAGE_FIELD_NAME = "Image";
@@ -24,6 +26,13 @@ function ImageEditorBlock() {
   const base = useBase();
 
   const globalConfig = useGlobalConfig();
+
+  // Settings
+  useSettingsButton(() => {
+    setIsSettingsVisible(!isSettingsVisible);
+  });
+
+  const [isSettingsVisible, setIsSettingsVisible] = useState(false);
 
   const tableId = globalConfig.get("selectedTableId");
   const table = base.getTableByIdIfExists(tableId);
@@ -63,6 +72,9 @@ function ImageEditorBlock() {
 
   return (
     <Box padding={3} borderBottom="thick">
+      {isSettingsVisible && (
+        <SettingsForm setIsSettingsVisible={setIsSettingsVisible} />
+      )}
       <FormField label="Table">
         <TablePickerSynced globalConfigKey="selectedTableId" />
       </FormField>
