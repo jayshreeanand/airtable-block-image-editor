@@ -5,11 +5,9 @@ import {
   Loader,
   Button,
   Box,
+  TablePicker,
 } from "@airtable/blocks/ui";
 import React, { Fragment, useState } from "react";
-
-const request = require("request");
-const fs = require("fs");
 
 const TABLE_NAME = "Products";
 const IMAGE_FIELD_NAME = "Image";
@@ -20,7 +18,8 @@ const API_ENDPOINT = "https://api.remove.bg/v1.0/removebg";
 function ImageEditorBlock() {
   const base = useBase();
 
-  const table = base.getTableByName(TABLE_NAME);
+  const [tableName, setTableName] = useState("Products");
+  const table = base.getTableByNameIfExists(tableName);
   const imageField = table.getFieldByName(IMAGE_FIELD_NAME);
   const records = useRecords(table, { fields: [imageField] });
 
@@ -43,34 +42,42 @@ function ImageEditorBlock() {
   }
 
   return (
-    <Box
-      position="absolute"
-      top="0"
-      bottom="0"
-      left="0"
-      right="0"
-      display="flex"
-      flexDirection="column"
-      justifyContent="center"
-      alignItems="center"
-    >
-      {isUpdateInProgress ? (
-        <Loader />
-      ) : (
-        <Fragment>
-          <Button
-            variant="primary"
-            onClick={onButtonClick}
-            disabled={!permissionCheck.hasPermission}
-            marginBottom={3}
-          >
-            Update Images
-          </Button>
-          {!permissionCheck.hasPermission &&
-            permissionCheck.reasonDisplayString}
-        </Fragment>
-      )}
-    </Box>
+    <div>
+      <TablePicker
+        table={table}
+        onChange={(newTable) => {
+          setTableName(newTable.name);
+        }}
+      />
+      <div
+        position="absolute"
+        top="0"
+        bottom="0"
+        left="0"
+        right="0"
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="center"
+      >
+        {isUpdateInProgress ? (
+          <Loader />
+        ) : (
+          <Fragment>
+            <Button
+              variant="primary"
+              onClick={onButtonClick}
+              disabled={!permissionCheck.hasPermission}
+              marginBottom={3}
+            >
+              Update Images
+            </Button>
+            {!permissionCheck.hasPermission &&
+              permissionCheck.reasonDisplayString}
+          </Fragment>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -111,36 +118,36 @@ async function getImageUpdatesAsync(table, imageField, records) {
     // );
 
     var editedImage = null;
-    if (attachmentCellValue) {
-      const requestUrl = "https://api.remove.bg/v1.0/removebg";
+    // if (attachmentCellValue) {
+    //   const requestUrl = "https://api.remove.bg/v1.0/removebg";
 
-      var headers = {
-        "X-Api-Key": process.env.REMOVE_BG_API_KEY,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      };
+    //   var headers = {
+    //     "X-Api-Key": process.env.REMOVE_BG_API_KEY,
+    //     "Content-Type": "application/json",
+    //     Accept: "application/json",
+    //   };
 
-      var data = {
-        image_url: "https://www.remove.bg/example.jpg",
-        size: "auto",
-      };
+    //   var data = {
+    //     image_url: "https://www.remove.bg/example.jpg",
+    //     size: "auto",
+    //   };
 
-      const response = await fetch(requestUrl, {
-        method: "POST",
-        headers: headers,
-        cors: true,
-        body: JSON.stringify(data),
-      });
+    //   const response = await fetch(requestUrl, {
+    //     method: "POST",
+    //     headers: headers,
+    //     cors: true,
+    //     body: JSON.stringify(data),
+    //   });
 
-      const updatedImage = await response.json();
-      console.log({ updatedImage });
-      editedImage = updatedImage.body;
-      // editedImage = updatedImage.data.result_b64;
-      // editedImage = new Image();
-      editedImage = "data:image/png;base64, " + updatedImage.data.result_b64;
+    //   const updatedImage = await response.json();
+    //   console.log({ updatedImage });
+    //   editedImage = updatedImage.body;
+    //   // editedImage = updatedImage.data.result_b64;
+    //   // editedImage = new Image();
+    //   editedImage = "data:image/png;base64, " + updatedImage.data.result_b64;
 
-      console.log({ editedImage });
-    }
+    //   console.log({ editedImage });
+    // }
 
     recordUpdates.push({
       id: record.id,
