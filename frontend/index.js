@@ -3,7 +3,6 @@ import {
   useBase,
   useRecords,
   useGlobalConfig,
-  useSettingsButton,
   Loader,
   Button,
   Box,
@@ -18,7 +17,6 @@ import {
 
 import { FieldType } from "@airtable/blocks/models";
 import React, { Fragment, useState } from "react";
-import SettingsForm from "./SettingsForm";
 import { allowedColors } from "./allowedColors";
 const url = require("url");
 
@@ -34,15 +32,7 @@ const MAX_RECORDS_PER_UPDATE = 50;
 
 function ImageEditorBlock() {
   const base = useBase();
-
-  useSettingsButton(() => {
-    setIsSettingsVisible(!isSettingsVisible);
-  });
-
   const globalConfig = useGlobalConfig();
-
-  const [isSettingsVisible, setIsSettingsVisible] = useState(false);
-
   const tableId = globalConfig.get("selectedTableId");
   const viewId = globalConfig.get("selectedViewId");
 
@@ -113,9 +103,6 @@ function ImageEditorBlock() {
 
   return (
     <Box padding={3} borderBottom="thick">
-      {isSettingsVisible && (
-        <SettingsForm setIsSettingsVisible={setIsSettingsVisible} />
-      )}
       <FormField label="Table">
         <TablePickerSynced globalConfigKey="selectedTableId" />
       </FormField>
