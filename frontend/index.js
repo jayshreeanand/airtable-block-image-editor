@@ -8,6 +8,9 @@ import {
   Loader,
   Button,
   Box,
+  ColorPaletteSynced,
+  colors,
+  colorUtils,
   FormField,
   InputSynced,
   TablePickerSynced,
@@ -16,9 +19,10 @@ import {
 import { FieldType } from "@airtable/blocks/models";
 import React, { Fragment, useState } from "react";
 import SettingsForm from "./SettingsForm";
+import { allowedColors } from "./allowedColors";
 const url = require("url");
 var cloudinary = require("cloudinary/lib/cloudinary").v2;
-var removeBgApiKey, cloudinaryUrl;
+var removeBgApiKey, cloudinaryUrl, selectedColor;
 const fs = require("fs");
 
 const EDITED_IMAGE_FIELD_NAME = "Edited Image";
@@ -42,6 +46,7 @@ function ImageEditorBlock() {
 
   removeBgApiKey = globalConfig.get("removeBgApiKey");
   cloudinaryUrl = globalConfig.get("cloudinaryUrl");
+  selectedColor = globalConfig.get("selectedColor");
 
   if (cloudinaryUrl != null) {
     let uri = url.parse(cloudinaryUrl, true);
@@ -79,6 +84,7 @@ function ImageEditorBlock() {
   const records = useRecords(table, { fields: [imageField] });
 
   const [isUpdateInProgress, setIsUpdateInProgress] = useState(false);
+  // const [color, setColor] = useState(allowedColors[0]);
 
   // check permissions
   const permissionCheck = imageField
@@ -123,6 +129,12 @@ function ImageEditorBlock() {
           allowedTypes={[FieldType.MULTIPLE_ATTACHMENTS]}
         />
       </FormField>
+      <ColorPaletteSynced
+        globalConfigKey="selectedColor"
+        allowedColors={allowedColors}
+        squareMargin={2}
+        width="150px"
+      />
       <FormField label="Remove BG API Key">
         <InputSynced
           globalConfigKey="removeBgApiKey"
@@ -200,8 +212,10 @@ async function getImageUpdatesAsync(
         "data:image/png;base64," + updatedImage.data.result_b64;
       console.log({ editedImage });
 
+      const bgColor = colorUtils.getHexForColor(selectedColor) || "#333333";
       const cloudinaryImage = await cloudinary.uploader.upload(
         editedImage,
+        { width: 300, height: 300, background: bgColor, crop: "pad" },
         function (error, result) {
           console.log(result, error);
           console.log({ result });
