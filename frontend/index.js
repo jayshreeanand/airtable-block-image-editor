@@ -80,6 +80,11 @@ function ImageEditorBlock() {
   const imageFieldId = globalConfig.get("imageFieldId");
   const imageField = table ? table.getFieldByIdIfExists(imageFieldId) : null;
 
+  const backgroundImageFieldId = globalConfig.get("backgroundImageFieldId");
+  const backgroundImageField = table
+    ? table.getFieldByIdIfExists(backgroundImageFieldId)
+    : null;
+
   const editedImageFieldId = globalConfig.get("editedImageFieldId");
   const editedImageField = table
     ? table.getFieldByIdIfExists(editedImageField)
@@ -123,6 +128,14 @@ function ImageEditorBlock() {
           table={table}
           globalConfigKey="imageFieldId"
           placeholder="Pick source image field"
+          allowedTypes={[FieldType.MULTIPLE_ATTACHMENTS]}
+        />
+      </FormField>
+      <FormField label="Backgroun Image Field">
+        <FieldPickerSynced
+          table={table}
+          globalConfigKey="backgroundImageFieldId"
+          placeholder="Pick the field for edited image"
           allowedTypes={[FieldType.MULTIPLE_ATTACHMENTS]}
         />
       </FormField>
