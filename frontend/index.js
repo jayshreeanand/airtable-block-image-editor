@@ -16,6 +16,9 @@ import {
 import { FieldType } from "@airtable/blocks/models";
 import React, { Fragment, useState } from "react";
 import SettingsForm from "./SettingsForm";
+const url = require("url");
+var cloudinary = require("cloudinary/lib/cloudinary").v2;
+var removeBgApiKey, cloudinaryUrl;
 
 // const TABLE_NAME = "Products";
 // const IMAGE_FIELD_NAME = "Image";
@@ -26,17 +29,44 @@ const API_ENDPOINT = "https://api.remove.bg/v1.0/removebg";
 function ImageEditorBlock() {
   const base = useBase();
 
-  const globalConfig = useGlobalConfig();
-
   // Settings
   useSettingsButton(() => {
     setIsSettingsVisible(!isSettingsVisible);
   });
 
+  const globalConfig = useGlobalConfig();
+
   const [isSettingsVisible, setIsSettingsVisible] = useState(false);
 
   const tableId = globalConfig.get("selectedTableId");
   const table = base.getTableByIdIfExists(tableId);
+
+  removeBgApiKey = globalConfig.get("removeBgApiKey");
+  cloudinaryUrl = globalConfig.get("cloudinaryUrl");
+
+  if (cloudinaryUrl != null) {
+    let uri = url.parse(cloudinaryUrl, true);
+
+    const cloudinaryApiKey = uri.auth && uri.auth.split(":")[0];
+    const cloudinaryApiSecret = uri.auth && uri.auth.split(":")[1];
+
+    // let parsedConfig = {
+    //   cloud_name: uri.host,
+    //   api_key: uri.auth && uri.auth.split(":")[0],
+    //   api_secret: uri.auth && uri.auth.split(":")[1],
+    //   private_cdn: uri.pathname != null,
+    //   secure_distribution: uri.pathname && uri.pathname.substring(1),
+    // };
+
+    console.log(uri.host);
+    console.log(cloudinaryApiKey);
+    console.log(cloudinaryApiSecret);
+    cloudinary.config({
+      cloud_name: uri.host,
+      api_key: cloudinaryApiKey,
+      api_secret: cloudinaryApiSecret,
+    });
+  }
 
   const imageFieldId = globalConfig.get("imageFieldId");
   const imageField = table ? table.getFieldByIdIfExists(imageFieldId) : null;
@@ -45,8 +75,6 @@ function ImageEditorBlock() {
   const editedImageField = table
     ? table.getFieldByIdIfExists(editedImageField)
     : null;
-
-  const removeBgApiKey = globalConfig.get("removeBgApiKey");
 
   // const imageField = table.getFieldByName(IMAGE_FIELD_NAME);
   const records = useRecords(table, { fields: [imageField] });
@@ -125,35 +153,30 @@ function ImageEditorBlock() {
           width="630px"
         />
       </FormField>
+      <FormField label="Cloudinary URL">
+        <InputSynced
+          globalConfigKey="cloudinaryUrl"
+          placeholder="Cloudinary Url"
+          width="630px"
+        />
+      </FormField>
 
-      <div
-        position="absolute"
-        top="0"
-        bottom="0"
-        left="0"
-        right="0"
-        display="flex"
-        flexDirection="column"
-        justifyContent="center"
-        alignItems="center"
-      >
-        {isUpdateInProgress ? (
-          <Loader />
-        ) : (
-          <Fragment>
-            <Button
-              variant="primary"
-              onClick={onButtonClick}
-              disabled={!permissionCheck.hasPermission}
-              marginBottom={3}
-            >
-              Update Images
-            </Button>
-            {!permissionCheck.hasPermission &&
-              permissionCheck.reasonDisplayString}
-          </Fragment>
-        )}
-      </div>
+      {isUpdateInProgress ? (
+        <Loader />
+      ) : (
+        <Fragment>
+          <Button
+            variant="primary"
+            onClick={onButtonClick}
+            disabled={!permissionCheck.hasPermission}
+            marginBottom={3}
+          >
+            Update Images
+          </Button>
+          {!permissionCheck.hasPermission &&
+            permissionCheck.reasonDisplayString}
+        </Fragment>
+      )}
     </Box>
   );
 }
@@ -171,33 +194,6 @@ async function getImageUpdatesAsync(
     const imageUrl = attachmentCellValue
       ? attachmentCellValue[0]["url"]
       : "nothing here";
-
-    // request.post(
-    //   {
-    //     url: "https://api.remove.bg/v1.0/removebg",
-    //     formData: {
-    //       image_url: "https://www.remove.bg/example.jpg",
-    //       size: "auto",
-    //     },
-    //     headers: {
-    //       "X-Api-Key": "SuyJzZp3BRKy6XxmLLeCY2BJ",
-    //       Accept: "application/json",
-    //       "Content-Type": "application/json",
-    //     },
-    //     // encoding: null,
-    //   },
-    //   function (error, response, body) {
-    //     // if (error) return console.error("Request failed:", error);
-    //     // if (response.statusCode != 200)
-    //     //   return console.error(
-    //     //     "Error:",
-    //     //     response.statusCode
-    //     //     // body.toString("utf8")
-    //     //   );
-    //     // console.log({ body });
-    //     // fs.writeFileSync("no-bg.png", body);
-    //   }
-    // );
 
     var editedImage = null;
     if (attachmentCellValue) {
@@ -227,6 +223,31 @@ async function getImageUpdatesAsync(
       // editedImage = updatedImage.data.result_b64;
       // editedImage = new Image();
       editedImage = "data:image/png;base64, " + updatedImage.data.result_b64;
+
+      cloudinary.uploader.upload(
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==",
+        function (error, result) {
+          console.log(result, error);
+        }
+      );
+
+      // cloudinary.uploader.upload(
+      //   "pizza.jpg",
+      //   { tags: "basic_sample" },
+      //   function (err, image) {
+      //     console.log();
+      //     console.log("** File Upload");
+      //     if (err) {
+      //       console.warn(err);
+      //     }
+      //     console.log(
+      //       "* public_id for the uploaded image is generated by Cloudinary's service."
+      //     );
+      //     console.log("* " + image.public_id);
+      //     console.log("* " + image.url);
+      //     waitForAllUploads("pizza", err, image);
+      //   }
+      // );
 
       console.log({ editedImage });
     }
