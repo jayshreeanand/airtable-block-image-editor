@@ -19,6 +19,7 @@ import SettingsForm from "./SettingsForm";
 const url = require("url");
 var cloudinary = require("cloudinary/lib/cloudinary").v2;
 var removeBgApiKey, cloudinaryUrl;
+const fs = require("fs");
 
 // const TABLE_NAME = "Products";
 // const IMAGE_FIELD_NAME = "Image";
@@ -224,10 +225,13 @@ async function getImageUpdatesAsync(
       // editedImage = new Image();
       editedImage = "data:image/png;base64, " + updatedImage.data.result_b64;
 
-      cloudinary.uploader.upload(
+      const cloudinaryImage = await cloudinary.uploader.upload(
+        // editedImage,
         "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==",
         function (error, result) {
           console.log(result, error);
+          console.log({ result });
+          return result;
         }
       );
 
@@ -250,14 +254,13 @@ async function getImageUpdatesAsync(
       // );
 
       console.log({ editedImage });
+      recordUpdates.push({
+        id: record.id,
+        fields: {
+          [EDITED_IMAGE_FIELD_NAME]: [{ url: cloudinaryImage.secure_url }],
+        },
+      });
     }
-
-    recordUpdates.push({
-      id: record.id,
-      fields: {
-        [EDITED_IMAGE_FIELD_NAME]: [{ url: editedImage }],
-      },
-    });
 
     // const image = record.getAttachmentimageUrlFromCellValueUrl()
     // const image = record.getCellValueAsString(titleField);
