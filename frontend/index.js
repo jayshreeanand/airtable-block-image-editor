@@ -4,23 +4,25 @@ import {
   useRecords,
   Loader,
   Button,
-  Box
-} from '@airtable/blocks/ui';
-import React, {Fragment, useState} from 'react';
+  Box,
+} from "@airtable/blocks/ui";
+import React, { Fragment, useState } from "react";
 
-const TABLE_NAME = 'Products';
-const IMAGE_FIELD_NAME = 'Image';
-const EDITED_IMAGE_FIELD_NAME = 'Edited Image';
+const request = require("request");
+const fs = require("fs");
+
+const TABLE_NAME = "Products";
+const IMAGE_FIELD_NAME = "Image";
+const EDITED_IMAGE_FIELD_NAME = "Edited Image";
 const MAX_RECORDS_PER_UPDATE = 50;
-const API_ENDPOINT = ''
+const API_ENDPOINT = "https://api.remove.bg/v1.0/removebg";
 
 function ImageEditorBlock() {
   const base = useBase();
 
   const table = base.getTableByName(TABLE_NAME);
-  const imageField = table.getFieldByName(IMAGE_FIELD_NAME)
-  const records = useRecords(table, { fields: [imageField]});
-
+  const imageField = table.getFieldByName(IMAGE_FIELD_NAME);
+  const records = useRecords(table, { fields: [imageField] });
 
   const [isUpdateInProgress, setIsUpdateInProgress] = useState(false);
 
@@ -31,7 +33,11 @@ function ImageEditorBlock() {
 
   async function onButtonClick() {
     setIsUpdateInProgress(true);
-    const recordUpdates = await getImageUpdatesAsync(table, imageField, records);
+    const recordUpdates = await getImageUpdatesAsync(
+      table,
+      imageField,
+      records
+    );
     await updateRecordsInBatchesAsync(table, recordUpdates);
     setIsUpdateInProgress(false);
   }
@@ -49,68 +55,119 @@ function ImageEditorBlock() {
       alignItems="center"
     >
       {isUpdateInProgress ? (
-          <Loader />
+        <Loader />
       ) : (
-          <Fragment>
-            <Button
-              variant="primary"
-              onClick={onButtonClick}
-              disabled={!permissionCheck.hasPermission}
-              marginBottom={3}
-            >
-              Update Images
-            </Button>
-            {!permissionCheck.hasPermission && permissionCheck.reasonDisplayString}
-          </Fragment>
-        )}
+        <Fragment>
+          <Button
+            variant="primary"
+            onClick={onButtonClick}
+            disabled={!permissionCheck.hasPermission}
+            marginBottom={3}
+          >
+            Update Images
+          </Button>
+          {!permissionCheck.hasPermission &&
+            permissionCheck.reasonDisplayString}
+        </Fragment>
+      )}
     </Box>
   );
 }
 
-function getAttachmentUrl(record, attachmentCellValue) {
-  attachmentCellValue.map(attachmentObj => {
-    const clientUrl =
-      record.getAttachmentClientUrlFromCellValueUrl(
-          attachmentObj.id,
-          attachmentObj.url
-      );
-    return clientUrl;
-  });
-}
-
 async function getImageUpdatesAsync(table, imageField, records) {
-    const recordUpdates = [];
-    for (const record of records) {
-      const attachmentCellValue = record.getCellValue(imageField);
+  const recordUpdates = [];
+  for (const record of records) {
+    const attachmentCellValue = record.getCellValue(imageField);
+    console.log({ attachmentCellValue });
+    const clientUrl = attachmentCellValue
+      ? attachmentCellValue[0]["url"]
+      : "nothing here";
 
-      const clientUrl = attachmentCellValue ? getAttachmentUrl(record, attachmentCellValue) : 'nothing here'
+    // request.post(
+    //   {
+    //     url: "https://api.remove.bg/v1.0/removebg",
+    //     formData: {
+    //       image_url: "https://www.remove.bg/example.jpg",
+    //       size: "auto",
+    //     },
+    //     headers: {
+    //       "X-Api-Key": "SuyJzZp3BRKy6XxmLLeCY2BJ",
+    //       Accept: "application/json",
+    //       "Content-Type": "application/json",
+    //     },
+    //     // encoding: null,
+    //   },
+    //   function (error, response, body) {
+    //     // if (error) return console.error("Request failed:", error);
+    //     // if (response.statusCode != 200)
+    //     //   return console.error(
+    //     //     "Error:",
+    //     //     response.statusCode
+    //     //     // body.toString("utf8")
+    //     //   );
+    //     // console.log({ body });
+    //     // fs.writeFileSync("no-bg.png", body);
+    //   }
+    // );
 
-      recordUpdates.push({
-        id: record.id,
-        fields: {
-          [EDITED_IMAGE_FIELD_NAME]: clientUrl
-        },
+    var editedImage = null;
+    if (attachmentCellValue) {
+      const requestUrl = "https://api.remove.bg/v1.0/removebg";
+
+      var headers = {
+        "X-Api-Key": process.env.REMOVE_BG_API_KEY,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      };
+
+      var data = {
+        image_url: "https://www.remove.bg/example.jpg",
+        size: "auto",
+      };
+
+      const response = await fetch(requestUrl, {
+        method: "POST",
+        headers: headers,
+        cors: true,
+        body: JSON.stringify(data),
       });
-      // const image = record.getAttachmentClientUrlFromCellValueUrl()
-        // const image = record.getCellValueAsString(titleField);
-        // const requestUrl = `${API_ENDPOINT}/${encodeURIComponent(articleTitle)}?redirect=true`;
-        // const response = await fetch(requestUrl, {cors: true});
-        // const pageSummary = await response.json();
 
-        // recordUpdates.push({
-        //     id: record.id,
-        //     fields: {
-        //         [EXTRACT_FIELD_NAME]: pageSummary.extract,
-        //         [IMAGE_FIELD_NAME]: pageSummary.originalimage
-        //             ? [{url: pageSummary.originalimage.source}]
-        //             : undefined,
-        //     },
-        // });
+      const updatedImage = await response.json();
+      console.log({ updatedImage });
+      editedImage = updatedImage.body;
+      // editedImage = updatedImage.data.result_b64;
+      // editedImage = new Image();
+      editedImage = "data:image/png;base64, " + updatedImage.data.result_b64;
 
- 
-        await delayAsync(50);
+      console.log({ editedImage });
     }
-    return recordUpdates;
+
+    recordUpdates.push({
+      id: record.id,
+      fields: {
+        [EDITED_IMAGE_FIELD_NAME]: [{ url: editedImage }],
+      },
+    });
+
+    // const image = record.getAttachmentClientUrlFromCellValueUrl()
+    // const image = record.getCellValueAsString(titleField);
+    // const requestUrl = `${API_ENDPOINT}/${encodeURIComponent(articleTitle)}?redirect=true`;
+    // const response = await fetch(requestUrl, {cors: true});
+    // const pageSummary = await response.json();
+
+    // recordUpdates.push({
+    //     id: record.id,
+    //     fields: {
+    //         [EXTRACT_FIELD_NAME]: pageSummary.extract,
+    //         [IMAGE_FIELD_NAME]: pageSummary.originalimage
+    //             ? [{url: pageSummary.originalimage.source}]
+    //             : undefined,
+    //     },
+    // });
+
+    await delayAsync(50);
+  }
+  return recordUpdates;
 }
 
 async function updateRecordsInBatchesAsync(table, recordUpdates) {
@@ -123,7 +180,7 @@ async function updateRecordsInBatchesAsync(table, recordUpdates) {
 }
 
 function delayAsync(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 initializeBlock(() => <ImageEditorBlock />);
