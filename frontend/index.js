@@ -259,6 +259,9 @@ async function getImageUpdatesAsync(
       if (backgroundImageUrl) {
         data.bg_image_url = backgroundImageUrl;
       }
+      if (selectedColor) {
+        data.bg_color = colorUtils.getHexForColor(selectedColor);
+      }
 
       const response = await fetch(requestUrl, {
         method: "POST",
@@ -276,15 +279,14 @@ async function getImageUpdatesAsync(
       const cloudinaryOptions = {
         crop: "pad",
       };
-      if (selectedColor) {
-        cloudinaryOptions.background = colorUtils.getHexForColor(selectedColor);
-      }
+
       if (imageWidth) {
         cloudinaryOptions.width = imageWidth;
       }
       if (imageHeight) {
         cloudinaryOptions.height = imageHeight;
       }
+      console.log({ cloudinaryOptions });
       const cloudinaryImage = await cloudinary.uploader.upload(
         editedImage,
         cloudinaryOptions,
