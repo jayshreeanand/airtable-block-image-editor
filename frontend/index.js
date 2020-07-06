@@ -132,17 +132,17 @@ function ImageEditorBlock() {
         squareMargin={2}
         width="150px"
       />
-      <FormField label="Output Image Width">
+      <FormField label="Output Image Width (Optional)">
         <InputSynced
           globalConfigKey="imageWidth"
-          placeholder="Image Width"
+          placeholder="Image Width in px"
           width="630px"
         />
       </FormField>
-      <FormField label="Output Image Height">
+      <FormField label="Output Image Height (Optional)">
         <InputSynced
           globalConfigKey="imageHeight"
-          placeholder="Image Height"
+          placeholder="Image Height in px"
           width="630px"
         />
       </FormField>
