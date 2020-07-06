@@ -2,6 +2,21 @@
 
 ![Airtable block Image Editor](https://res.cloudinary.com/dlgztvq9v/image/upload/v1594048157/image-editor-2.png)
 
+Bulk image editor is an airtable block which will help in editing large number of images for e-commerce and social media.
+
+- Removes background from the images using AI background removal API (remove.bg)
+
+- Crops images according to dimension specified by the user
+
+- Applies either a selected background image or background color to the images
+
+- Applies an watermark text to the images.
+
+- View picker to select various views and filters and thereby control the records that are being edited
+
+- Background can be set to either a selected color (using a color picker) or any background image
+
+- Image manipulation (compression, cropping, padding, text overlay etc) are performed using Cloudinary API
 
 
 ## How to run this block
