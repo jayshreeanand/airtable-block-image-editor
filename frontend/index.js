@@ -6,12 +6,13 @@ import {
   Loader,
   Button,
   Box,
-  TablePicker,
+  TablePickerSynced,
+  FieldPickerSynced,
 } from "@airtable/blocks/ui";
 import React, { Fragment, useState } from "react";
 
-const TABLE_NAME = "Products";
-const IMAGE_FIELD_NAME = "Image";
+// const TABLE_NAME = "Products";
+// const IMAGE_FIELD_NAME = "Image";
 const EDITED_IMAGE_FIELD_NAME = "Edited Image";
 const MAX_RECORDS_PER_UPDATE = 50;
 const API_ENDPOINT = "https://api.remove.bg/v1.0/removebg";
@@ -21,17 +22,21 @@ function ImageEditorBlock() {
 
   const globalConfig = useGlobalConfig();
   const tableId = globalConfig.get("selectedTableId");
+  const imageFieldId = globalConfig.get("imageFieldId");
 
-  const table = base.getTableByNameIfExists(tableId);
-  const imageField = table.getFieldByName(IMAGE_FIELD_NAME);
+  const table = base.getTableByIdIfExists(tableId);
+  const imageField = table ? table.getFieldByIdIfExists(imageFieldId) : null;
+  // const imageField = table.getFieldByName(IMAGE_FIELD_NAME);
   const records = useRecords(table, { fields: [imageField] });
 
   const [isUpdateInProgress, setIsUpdateInProgress] = useState(false);
 
   // check permissions
-  const permissionCheck = table.checkPermissionsForUpdateRecord(undefined, {
-    [EDITED_IMAGE_FIELD_NAME]: undefined,
-  });
+  const permissionCheck = imageField
+    ? table.checkPermissionsForUpdateRecord(undefined, {
+        [imageField.name]: undefined,
+      })
+    : { hasPermission: false, reasonDisplayString: "Table does not exist" };
 
   async function onButtonClick() {
     setIsUpdateInProgress(true);
@@ -46,12 +51,8 @@ function ImageEditorBlock() {
 
   return (
     <div>
-      <TablePicker
-        table={table}
-        onChange={(newTable) => {
-          globalConfig.setAsync("selectedTableId", newTable.id);
-        }}
-      />
+      <TablePickerSynced globalConfigKey="selectedTableId" />
+      <FieldPickerSynced table={table} globalConfigKey="imageFieldId" />
       <div
         position="absolute"
         top="0"
