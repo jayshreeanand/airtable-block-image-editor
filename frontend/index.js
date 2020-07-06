@@ -2,6 +2,7 @@ import {
   initializeBlock,
   useBase,
   useRecords,
+  useGlobalConfig,
   Loader,
   Button,
   Box,
@@ -18,7 +19,9 @@ const API_ENDPOINT = "https://api.remove.bg/v1.0/removebg";
 function ImageEditorBlock() {
   const base = useBase();
 
-  const [tableId, setTableId] = useState("Products");
+  const globalConfig = useGlobalConfig();
+  const tableId = globalConfig.get("selectedTableId");
+
   const table = base.getTableByNameIfExists(tableId);
   const imageField = table.getFieldByName(IMAGE_FIELD_NAME);
   const records = useRecords(table, { fields: [imageField] });
@@ -46,7 +49,7 @@ function ImageEditorBlock() {
       <TablePicker
         table={table}
         onChange={(newTable) => {
-          setTableId(newTable.id);
+          globalConfig.setAsync("selectedTableId", newTable.id);
         }}
       />
       <div
