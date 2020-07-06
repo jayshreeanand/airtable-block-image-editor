@@ -15,6 +15,7 @@ import {
   InputSynced,
   TablePickerSynced,
   FieldPickerSynced,
+  ViewPickerSynced,
 } from "@airtable/blocks/ui";
 import { FieldType } from "@airtable/blocks/models";
 import React, { Fragment, useState } from "react";
@@ -45,7 +46,10 @@ function ImageEditorBlock() {
   const [isSettingsVisible, setIsSettingsVisible] = useState(false);
 
   const tableId = globalConfig.get("selectedTableId");
+  const viewId = globalConfig.get("selectedViewId");
+
   const table = base.getTableByIdIfExists(tableId);
+  const view = table ? table.getViewByIdIfExists(viewId) : null;
 
   removeBgApiKey = globalConfig.get("removeBgApiKey");
   cloudinaryUrl = globalConfig.get("cloudinaryUrl");
@@ -96,7 +100,7 @@ function ImageEditorBlock() {
     : null;
 
   // const imageField = table.getFieldByName(IMAGE_FIELD_NAME);
-  const records = useRecords(table, {
+  const records = useRecords(view, {
     fields: [imageField, backgroundImageField, backgroundColorField],
   });
 
@@ -130,6 +134,9 @@ function ImageEditorBlock() {
       )}
       <FormField label="Table">
         <TablePickerSynced globalConfigKey="selectedTableId" />
+      </FormField>
+      <FormField label="View">
+        <ViewPickerSynced table={table} globalConfigKey="selectedViewId" />
       </FormField>
       <FormField label="Image Field">
         <FieldPickerSynced
@@ -280,11 +287,14 @@ async function getImageUpdatesAsync(
         crop: "pad",
         overlay: {
           font_family: "Arial",
-          font_size: 45,
+          font_size: 20,
           font_weight: "bold",
           text: "Hello%20World",
         },
-        gravity: "south",
+        gravity: "south_east",
+        x: 20,
+        y: 20,
+        color: "#eee",
       };
 
       if (imageWidth) {
