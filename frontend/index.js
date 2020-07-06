@@ -28,7 +28,8 @@ var removeBgApiKey,
   selectedColor,
   imageWidth,
   imageHeight,
-  editedImageField;
+  editedImageField,
+  watermarkText;
 const MAX_RECORDS_PER_UPDATE = 50;
 
 function ImageEditorBlock() {
@@ -53,6 +54,7 @@ function ImageEditorBlock() {
   selectedColor = globalConfig.get("selectedColor");
   imageWidth = globalConfig.get("imageWidth");
   imageHeight = globalConfig.get("imageHeight");
+  watermarkText = globalConfig.get("watermarkText");
 
   if (cloudinaryUrl != null) {
     let uri = url.parse(cloudinaryUrl, true);
@@ -102,7 +104,8 @@ function ImageEditorBlock() {
       imageField,
       backgroundImageField,
       records,
-      removeBgApiKey
+      removeBgApiKey,
+      watermarkText
     );
     await updateRecordsInBatchesAsync(table, recordUpdates);
     setIsUpdateInProgress(false);
@@ -165,6 +168,13 @@ function ImageEditorBlock() {
           shouldAllowPickingNone="true"
         />
       </FormField>
+      <FormField label="Watermark text (Optional)">
+        <InputSynced
+          globalConfigKey="watermarkText"
+          placeholder="Watermark Text"
+          width="630px"
+        />
+      </FormField>
       <FormField label="Remove BG API Key">
         <InputSynced
           globalConfigKey="removeBgApiKey"
@@ -205,7 +215,8 @@ async function getImageUpdatesAsync(
   imageField,
   backgroundImageField,
   records,
-  removeBgApiKey
+  removeBgApiKey,
+  watermarkText
 ) {
   const recordUpdates = [];
   for (const record of records) {
@@ -257,16 +268,19 @@ async function getImageUpdatesAsync(
 
       const cloudinaryOptions = {
         crop: "pad",
-        overlay: {
-          font_family: "Arial",
-          font_size: 20,
-          font_weight: "bold",
-          text: "watermark",
-        },
         gravity: "south_east",
         y: 5,
         color: "#eee",
       };
+
+      if (watermarkText) {
+        cloudinaryOptions.overlay = {
+          font_family: "Arial",
+          font_size: 20,
+          font_weight: "bold",
+          text: encodeURI(watermarkText),
+        };
+      }
 
       if (imageWidth) {
         cloudinaryOptions.width = imageWidth;
